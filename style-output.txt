@@ -1,0 +1,52 @@
+﻿## UI Pro Max Search Results
+**Domain:** style | **Query:** glassmorphism dark dashboard
+**Source:** styles.csv | **Found:** 3 results
+
+### Result 1
+- **Style Category:** Dark Mode (OLED)
+- **Type:** General
+- **Keywords:** Dark theme, low light, high contrast, deep black, midnight blue, eye-friendly, OLED, night mode, power efficient
+- **Primary Colors:** Deep Black #000000, Dark Grey #121212, Midnight Blue #0A0E27
+- **Effects & Animation:** Minimal glow (text-shadow: 0 0 10px), dark-to-light transitions, low white emission, high readability, visible focus
+- **Best For:** Night-mode apps, coding platforms, entertainment, eye-strain prevention, OLED devices, low-light
+- **Performance:** ÔÜí Excellent
+- **Accessibility:** Ô£ô WCAG AAA
+- **Framework Compatibility:** Tailwind 10/10, MUI 10/10, Chakra 10/10
+- **Complexity:** Low
+- **AI Prompt Keywords:** Create an OLED-optimized dark interface with deep black (#000000), dark grey (#121212), midnight blue accents. Use minimal glow effects, vibrant neon accents (green, blue, gold, purple), high contrast text. Optimize for eye comfort and OLED power saving.
+- **CSS/Technical Keywords:** background: #000000 or #121212, color: #FFFFFF or #E0E0E0, text-shadow: 0 0 10px neon-color (sparingly), filter: brightness(0.8) if needed, color-scheme: dark
+- **Implementation Checklist:** ÔİÉ Deep black #000000 or #121212, ÔİÉ Vibrant neon accents used, ÔİÉ Text contrast 7:1+, ÔİÉ Minimal glow effects, ÔİÉ OLED power optimization, ÔİÉ No white (#FFFFFF) background
+- **Design System Variables:** --bg-black: #000000, --bg-dark-grey: #121212, --text-primary: #FFFFFF, --accent-neon: neon colors, --glow-effect: minimal, --oled-optimized: true
+
+### Result 2
+- **Style Category:** Cyberpunk UI
+- **Type:** General
+- **Keywords:** Neon, dark mode, terminal, HUD, sci-fi, glitch, dystopian, futuristic, matrix, tech noir
+- **Primary Colors:** #00FF00 (Matrix Green), #FF00FF (Magenta), #00FFFF (Cyan), #0D0D0D (Dark)
+- **Effects & Animation:** Neon glow (text-shadow), glitch animations (skew/offset), scanlines (::before overlay), terminal fonts
+- **Best For:** Gaming platforms, tech products, crypto apps, sci-fi applications, developer tools, entertainment
+- **Performance:** ÔÜá Moderate
+- **Accessibility:** ÔÜá Limited (dark+neon)
+- **Framework Compatibility:** Tailwind 8/10, Custom CSS 10/10
+- **Complexity:** Medium
+- **AI Prompt Keywords:** Design a cyberpunk interface. Use: neon colors on dark (#0D0D0D), terminal/HUD aesthetic, glitch effects, scanlines overlay, matrix green accents, monospace fonts, angular shapes, dystopian tech feel.
+- **CSS/Technical Keywords:** background: #0D0D0D, color: #00FF00 or #FF00FF, font-family: monospace, text-shadow: 0 0 10px neon, animation: glitch (transform skew), ::before scanlines (repeating-linear-gradient)
+- **Implementation Checklist:** ÔİÉ Dark background only, ÔİÉ Neon accents visible, ÔİÉ Glitch effect subtle, ÔİÉ Scanlines optional, ÔİÉ Monospace font, ÔİÉ Terminal aesthetic
+- **Design System Variables:** --bg-dark: #0D0D0D, --neon-green: #00FF00, --neon-magenta: #FF00FF, --neon-cyan: #00FFFF, --scanline-opacity: 0.1, --glitch-duration: 0.3s
+
+### Result 3
+- **Style Category:** Glassmorphism
+- **Type:** General
+- **Keywords:** Frosted glass, transparent, blurred background, layered, vibrant background, light source, depth, multi-layer
+- **Primary Colors:** Translucent white: rgba(255,255,255,0.1-0.3)
+- **Effects & Animation:** Backdrop blur (10-20px), subtle border (1px solid rgba white 0.2), light reflection, Z-depth
+- **Best For:** Modern SaaS, financial dashboards, high-end corporate, lifestyle apps, modal overlays, navigation
+- **Performance:** ÔÜá Good
+- **Accessibility:** ÔÜá Ensure 4.5:1
+- **Framework Compatibility:** Tailwind 9/10, MUI 8/10, Chakra 8/10
+- **Complexity:** Medium
+- **AI Prompt Keywords:** Design a glassmorphic interface with frosted glass effect. Use backdrop blur (10-20px), translucent overlays (rgba 10-30% opacity), vibrant background colors, subtle borders, light source reflection, layered depth. Perfect for modern overlays and cards.
+- **CSS/Technical Keywords:** backdrop-filter: blur(15px), background: rgba(255, 255, 255, 0.15), border: 1px solid rgba(255,255,255,0.2), -webkit-backdrop-filter: blur(15px), z-index layering for depth
+- **Implementation Checklist:** ÔİÉ Backdrop-filter blur 10-20px, ÔİÉ Translucent white 15-30% opacity, ÔİÉ Subtle border 1px light, ÔİÉ Vibrant background verified, ÔİÉ Text contrast 4.5:1 checked
+- **Design System Variables:** --blur-amount: 15px, --glass-opacity: 0.15, --border-color: rgba(255,255,255,0.2), --background: vibrant color, --text-color: light/dark based on BG
+

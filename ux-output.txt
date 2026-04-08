@@ -1,0 +1,37 @@
+﻿## UI Pro Max Search Results
+**Domain:** ux | **Query:** animation accessibility fintech
+**Source:** ux-guidelines.csv | **Found:** 3 results
+
+### Result 1
+- **Category:** Animation
+- **Issue:** Continuous Animation
+- **Platform:** All
+- **Description:** Infinite animations are distracting
+- **Do:** Use for loading indicators only
+- **Don't:** Use for decorative elements
+- **Code Example Good:** animate-spin on loader
+- **Code Example Bad:** animate-bounce on icons
+- **Severity:** Medium
+
+### Result 2
+- **Category:** Animation
+- **Issue:** Reduced Motion
+- **Platform:** All
+- **Description:** Respect user's motion preferences
+- **Do:** Check prefers-reduced-motion media query
+- **Don't:** Ignore accessibility motion settings
+- **Code Example Good:** @media (prefers-reduced-motion: reduce)
+- **Code Example Bad:** No motion query check
+- **Severity:** High
+
+### Result 3
+- **Category:** Animation
+- **Issue:** Easing Functions
+- **Platform:** All
+- **Description:** Linear motion feels robotic
+- **Do:** Use ease-out for entering ease-in for exiting
+- **Don't:** Use linear for UI transitions
+- **Code Example Good:** ease-out
+- **Code Example Bad:** linear
+- **Severity:** Low
+
