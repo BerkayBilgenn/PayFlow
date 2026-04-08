@@ -1,90 +1,78 @@
-# PayFlow: Peer-to-Peer Fintech Payment Application
+# PayFlow: Peer-to-Peer Fintech Payment Application Prospectus
 
-## Project Overview
-This project is a functional prototype of a consumer fintech application, specifically designed to allow users to securely request money from their peers. It was developed to fulfill the requirements of the First Interview Assignment. The application mimics core mechanics seen in services like Venmo or Cash App, providing a seamless payment request flow. Users can create, view, manage, and fulfill money requests through an interactive, responsive dashboard.
+## 1. Project Prospectus and Overview
+PayFlow is a secure, fast, and highly reliable consumer fintech application designed explicitly for peer-to-peer (P2P) money requests and transfers. It functions similarly to widely known tools like Venmo or Cash App but is specialized for a streamlined "Request First" logic. 
 
-The overarching design prioritizes reliability, real-time data synchronization, and a premium user experience.
+This document serves as the comprehensive prospectus and manual, detailing exactly what the software does, under what circumstances it should be utilized, and step-by-step instructions on how to navigate its interface. It fulfills the requirements of the Lovie First Interview Assignment, acting as a testament to strict spec-driven design.
 
-## Live Demo and Assets
-- Live Application URL: [Insert Vercel URL Here]
-- Demonstration Video: [Insert Video Link Here showing your prompts and build process]
-- E2E Test Recording: [Insert Playwright Automation Video URL]
+## 2. When to Use This Application (Core Use Cases)
+PayFlow is designed for situations where financial interactions between individuals need structure, tracking, and instant synchronization. You should use PayFlow in scenarios such as:
 
-Please note that the live application requires no local setup to test. You can visit the URL, register an account with any email, and begin exchanging payment requests immediately.
+- Shared Expenses: Splitting a dinner bill with friends where one person pays the restaurant and needs to reliably collect immediate reimbursements from the others.
+- Freelance or Micro-Payments: Requesting structured payments for small services without relying on heavy invoicing tools. The 7-day expiration ensures prompt settlements.
+- Roommate Utilities: Consolidating household bills into clear, formal requests so that every member can track what they owe and what has already been settled.
 
-## Tech Stack and AI Tools Used
-This application relies on a modern, robust technology stack tailored for speed and reliability:
-- Frontend Framework: Next.js (App Router)
-- UI Library: React Server Components and Hooks
-- Styling: Custom CSS with Premium UI Design Patterns
-- Database and Authentication: Supabase (PostgreSQL with Row Level Security and Realtime WebSockets)
-- End-to-End Testing: Playwright
-- AI Coding Assistant: Google Gemini via Antigravity Agentic Workflow. The AI was utilized for strictly specifying the architecture, generating UI layouts in a single pass, configuring Postgres Row Level Security, and debugging complex strict-mode React lifecycles.
+## 3. How to Use the Application: Step-by-Step User Guide
+The interface is designed to be frictionless. Even users with minimal technical background must follow these steps to securely transact.
 
-## Core Features Breakdown
-1. Request Creation Flow
-Users can initiate a request by entering a target email address, a specific amount greater than zero, and an optional explanatory note. The system enforces validation on the amount and email format before submission.
+### A. Registering and Accessing the Dashboard
+1. Open the application URL in a web browser (desktop or mobile).
+2. You will be greeted by the Login portal. If you do not have an account, click the "Create one" link to navigate to the Registration screen.
+3. Enter a valid email address and a strong password. Click the "Sign Up" button. You will be instantly authenticated and redirected to your Dashboard.
 
-2. Comprehensive Dashboard
-Both incoming (received) and outgoing (sent) requests are aggregated in a unified dashboard interface. 
-- Incoming requests provide actionable buttons to Pay or Decline.
-- Outgoing requests display their current status (Pending, Paid, Declined, Expired, Canceled) with the option to Cancel if the request has not yet been processed.
+### B. Creating a Money Request
+1. On your Dashboard, locate the brightly colored "Request Money" button in the upper right section. Click it.
+2. A secure modal window will appear. 
+3. In the "Recipient Email" field, accurately type the email address of the person from whom you are requesting money.
+4. In the "Amount" field, input the exact numeric value (e.g., 50.00). It must be greater than zero.
+5. In the "Note" field, provide a clear reason for the request (e.g., "Dinner at Italian Restaurant").
+6. Click "Send Request". The system will instantly validate your inputs. If your wallet balance and inputs are valid, the request is generated and stored securely. 
 
-3. Complete Fulfullment Simulation
-When a user clicks Pay on an incoming request, the application triggers a specialized Supabase Remote Procedure Call (RPC). This securely updates balances using atomic operations and modifies the request status. The user interface updates instantaneously across all active devices via Supabase Realtime subscriptions without requiring a manual page refresh.
+### C. Paying an Incoming Request
+1. As the recipient of a request, check your Dashboard under the "Incoming" tab.
+2. You will see a list of records showing who requested the money, the amount, the note, and the expiration time.
+3. To fulfill the request, review the details. If you agree, click the "Pay" button next to the relevant request.
+4. An encrypted payment transition will simulate processing. Once finalized, the system deducts the amount from your total balance and routes it to the sender's balance. 
+5. The request status updates automatically to "Paid", and the notification is pushed to all devices without needing to refresh the page.
 
-4. Expiration Logic
-Every created request automatically includes a 7-day expiration timestamp. If the request is not fulfilled or declined within this period, the system will flag the request as Expired.
+### D. Declining or Canceling a Request
+- If you receive an unjustified request: Click the "Decline" button. The status immediately updates to "Declined", protecting your wallet balance.
+- If you made a mistake sending a request: Navigate to your "Outgoing" tab. As long as the request is still marked as "Pending", you will have a "Cancel" option. Clicking it invalidates the request for the recipient.
 
-## Setup Instructions for Local Development
-Follow these detailed steps to run the application on your own computer.
+## 4. Functional Mechanics and System Rules
+- Real-Time Updates: The entire dashboard is connected via WebSockets. If your debtor pays your request while you are staring at the screen, your total wallet balance flashes and updates instantaneously.
+- Zero-Trust Security: Under the hood, Row Level Security ensures that you can strictly only view your own incoming requests and your own outgoing requests. A completely different user can never peek into your transactional history.
+- Expiration Logic: The system guarantees that pending requests do not linger indefinitely. A 7-day countdown operates on every request. If an action (Pay or Decline) is not taken before time runs out, the request is strictly locked and marked as "Expired".
 
-Step 1: Install Prerequisites
-Ensure you have Node.js (version 18 or higher) and Git installed on your computer.
+## 5. Live Demo and Actionable Assets
+- Public Live Application URL: [Insert Vercel URL Here]
+- Development Demonstration Video: [Insert Video Link Here showing your prompts and build process]
+- E2E Playwright Automation Video: [Insert Playwright Automation Video URL]
 
-Step 2: Clone the Repository
-Open your terminal or command prompt and run the following command to download the code to your local machine:
-git clone https://github.com/BerkayBilgenn/PayFlow.git
+## 6. Technical Architecture and AI Tools Used
+- Frontend Infrastructure: Next.js (App Router), React Server Components.
+- User Interface: Custom styling implementing Glassmorphism for a premium aesthetic touch.
+- Data and Authentication Layer: Supabase (PostgreSQL with strict Row Level Security rules). Payments are handled via atomic Remote Procedure Calls (RPC) to prevent race conditions.
+- Automated Testing: Playwright for comprehensive cross-browser test simulations.
+- AI Vibe Coding: Constructed using Google Gemini via the Antigravity Agentic workflow for strict rapid prototyping, exact UI positioning, and complex relational security policies.
 
-Step 3: Navigate to the Directory
-Move into the project folder using:
-cd PayFlow
+## 7. Setup Instructions for Local Development
+1. Verify Node.js (v18+) and Git are installed.
+2. Clone the repository running: git clone https://github.com/BerkayBilgenn/PayFlow.git
+3. Navigate into the directory: cd PayFlow
+4. Install all node modules securely: npm install
+5. Create a file named .env.local in your directory and add:
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+6. Execute the contents of Supabase.sql inside your Supabase project's SQL editor to structure the database and establish the safety policies.
+7. Launch the local development server: npm run dev
+8. Open your local browser to http://localhost:3000.
 
-Step 4: Install Dependencies
-Download and install all the necessary libraries by running:
-npm install
+## 8. How to Execute E2E Tests
+1. From the project root, download the required test browser binaries: npx playwright install
+2. Execute the entire test suite via: npx playwright test
+3. The testing engine will perform clicks and inputs just like a human user would, validating that requests drop into the correct queues and that balances update correctly.
+4. To view the final results and the automated screen recordings, run: npx playwright show-report
 
-Step 5: Configure Environment Variables
-You must connect the application to a Supabase database.
-1. Create a file named .env.local in the root directory of the project.
-2. Open .env.local and add your Supabase credentials exactly in this format:
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-Step 6: Set Up the Database
-In your Supabase project dashboard, navigate to the SQL Editor and execute the code found in the "Supabase.sql" file located in the root of this project. This will create the necessary users table, profiles table, payment requests table, and Row Level Security rules. You must also create the "process_payment" RPC function.
-
-Step 7: Start the Server
-Run the application locally by executing:
-npm run dev
-
-Step 8: View the Application
-Open your web browser and navigate to http://localhost:3000. You will see the application running.
-
-## How to Run End-to-End (E2E) Tests
-This project includes automated End-to-End tests built with Playwright to verify core user journeys (signing up, creating a request, and paying a request).
-
-Step 1: Install Playwright Browsers
-If this is your first time using Playwright, you must download the test browsers by running:
-npx playwright install
-
-Step 2: Execute the Test Suite
-To run the automated tests in the background, run the following command in your terminal:
-npx playwright test
-
-Step 3: View Test Results and Video Recordings
-Playwright is configured to record video of the automation process. To view the HTML report along with the screen recordings, run:
-npx playwright show-report
-
-## Workflow and GitHub Spec-Kit
-This project strictly adhered to a spec-driven development process. Initial requirements were parsed into comprehensive markdown documents. Using an agentic AI coding environment, tasks were continuously divided into smaller components, executed in an autonomous loop, and verified against the initial specification. Real-time updates and strict PostgreSQL Row Level Security policies were implemented simultaneously to maintain data integrity.
+## 9. Workflow and Spec-Kit Details
+The development of this software was built upon a rigorous Spec-Kit workflow. Detailed instructional directives defined edge cases beforehand (e.g., insufficient funds mitigation, zero dollar boundaries, secure token referencing). These specifications were fed sequentially to the AI coding agent. The testing and deployment mechanisms were automated continuously, ensuring that architecture and implementation progressed in complete lockstep.
