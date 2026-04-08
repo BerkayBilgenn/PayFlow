@@ -305,7 +305,7 @@ export default function RequestDetailPage({ params }: { params: Promise<{ id: st
         onClose={() => setConfirmModalOpen(false)}
         onConfirm={confirmAndPay}
         amount={request.amount}
-        recipientEmail={request.sender_email}
+        recipientEmail={request.sender_email || "Unknown"}
       />
 
       <Toast 

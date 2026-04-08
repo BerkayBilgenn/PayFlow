@@ -12,6 +12,7 @@ import {
   XCircle,
   ArrowDownLeft,
   ArrowUpRight,
+  TrendingUp,
   Clock,
   DollarSign,
   Link2,
@@ -19,7 +20,7 @@ import {
   X as XIcon,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { PaymentRequest, getEffectiveStatus } from "@/lib/types";
+import { PaymentRequest, PaymentStatus, getEffectiveStatus } from "@/lib/types";
 import StatusBadge from "@/components/StatusBadge";
 import Toast from "@/components/Toast";
 import RequestMoneyModal from "@/components/RequestMoneyModal";
