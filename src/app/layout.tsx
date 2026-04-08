@@ -1,10 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "PayFlow — P2P Payment Requests",
   description:
     "Send and receive payment requests instantly. A modern peer-to-peer fintech platform.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 0.9,
+  maximumScale: 5,
+  themeColor: "#06080F"
 };
 
 export default function RootLayout({
