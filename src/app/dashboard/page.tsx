@@ -113,15 +113,12 @@ export default function DashboardPage() {
       setCurrentBalance(Number(data.balance));
     } else {
       console.warn("fetchBalance returned no balance data for uid:", uid);
-      // Fallback visual in case RLS blocks reading or row is missing
-      // Only set to 50000 if we don't already have a valid local state
       setCurrentBalance((prev) => (prev !== null ? prev : 50000)); 
     }
     
     setBalanceLoading(false);
   }, []);
 
-  // Fetch real authenticated user & subscribe to realtime
   // Fetch real authenticated user & subscribe to realtime
   useEffect(() => {
     let active = true;
@@ -134,7 +131,7 @@ export default function DashboardPage() {
     const initialize = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!active) return; // Prevent state update if unmounted
+        if (!active) return;
 
         if (user?.email) {
           setUserEmail(user.email);
@@ -144,7 +141,6 @@ export default function DashboardPage() {
           fetchRequests(user.email);
           fetchBalance(user.id);
 
-          // Realtime: payment_requests changes
           reqChannel = supabase
             .channel(`payment_requests_changes_${user.id}`)
             .on(
@@ -171,7 +167,6 @@ export default function DashboardPage() {
             )
             .subscribe();
 
-          // Realtime: wallet balance changes (profiles table)
           balChannel = supabase
             .channel(`profile_balance_${user.id}`)
             .on(
@@ -212,8 +207,6 @@ export default function DashboardPage() {
     router.push("/login");
   };
 
-
-
   // Opens the PIN confirmation modal instead of paying immediately
   const handlePay = (req: PaymentRequest) => {
     setConfirmPayTarget(req);
@@ -222,10 +215,8 @@ export default function DashboardPage() {
   const confirmAndPay = async () => {
     if (!confirmPayTarget) return;
     const id = confirmPayTarget.id;
-    const amountToDeduct = confirmPayTarget.amount || 0;
     setPayingId(id);
 
-    // Use the process_payment RPC to atomically update balances
     const { error } = await supabase.rpc('process_payment', {
       request_id: id,
     });
@@ -233,8 +224,6 @@ export default function DashboardPage() {
     setPayingId(null);
     if (!error) {
       showToast("Payment successful! Funds have been transferred.", "success");
-      
-      // Explicitly refresh balance local state (in addition to realtime)
       if (userId) {
         fetchBalance(userId);
       }
@@ -269,14 +258,10 @@ export default function DashboardPage() {
     amount: number;
     note: string;
   }) => {
-    // ── Calculate dynamic balance based on transaction history ──
-    // Money earned: Requests I sent out (outgoing) that got PAID
     const incomingPaidAmount = outgoing.filter((r) => r.status === "PAID").reduce((sum, r) => sum + (r.amount || 0), 0);
-    // Money spent: Requests sent to me (incoming) that I PAID
     const outgoingPaidAmount = incoming.filter((r) => r.status === "PAID").reduce((sum, r) => sum + (r.amount || 0), 0);
     const dynamicBalance = 50000 + incomingPaidAmount - outgoingPaidAmount;
 
-    // ── Insufficient funds check ──
     if (data.amount > dynamicBalance) {
       showToast(
         `Yetersiz Bakiye — İşlem tutarı ($${data.amount.toFixed(2)}) mevcut bakiyenizden ($${dynamicBalance.toFixed(2)}) fazla.`,
@@ -293,7 +278,6 @@ export default function DashboardPage() {
       sender_id: user?.id || "unknown",
       sender_email: userEmail,
       recipient_email: data.recipientEmail,
-      // Keep old column names as backup in case the DB still has NOT NULL constraints on them
       recipient_contact: data.recipientEmail,
       amount: data.amount,
       note: data.note || null,
@@ -335,22 +319,18 @@ export default function DashboardPage() {
     (r) => getEffectiveStatus(r) === "PENDING"
   ).length;
 
-  // Money earned: Requests I created (outgoing) which got PAID by others
   const totalReceived = outgoing
     .filter((r) => r.status === "PAID")
     .reduce((sum, r) => sum + (r.amount || 0), 0);
 
-  // Money spent: Requests sent to me (incoming) which I PAID
   const totalSent = incoming
     .filter((r) => r.status === "PAID")
     .reduce((sum, r) => sum + (r.amount || 0), 0);
 
   const currentList = activeTab === "incoming" ? incoming : outgoing;
 
-  // ── Derived dynamic balance to ensure frontend perfect sync ──
   const derivedBalance = 50000 + totalReceived - totalSent;
 
-  // ── Animated stat values ──
   const animatedReceived = useAnimatedNumber(totalReceived);
   const animatedSent = useAnimatedNumber(totalSent);
   const animatedBalance = useAnimatedNumber(derivedBalance);
@@ -360,7 +340,7 @@ export default function DashboardPage() {
       {/* Background gradient orbs */}
       <div className="bg-gradient-mesh" />
 
-      {/* Navbar */}
+      {/* ══════ Navbar ══════ */}
       <nav
         style={{
           position: "sticky",
@@ -372,23 +352,12 @@ export default function DashboardPage() {
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}
       >
-        <div
-          style={{
-            width: "100%",
-            maxWidth: "1400px",
-            margin: "0 auto",
-            padding: "0 32px",
-            height: "64px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div className="dash-nav-inner">
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div
               style={{
-                width: "36px",
-                height: "36px",
+                width: "34px",
+                height: "34px",
                 borderRadius: "10px",
                 display: "flex",
                 alignItems: "center",
@@ -397,20 +366,20 @@ export default function DashboardPage() {
                 border: "1px solid rgba(202,138,4,0.3)",
               }}
             >
-              <Zap style={{ width: 20, height: 20, color: "#CA8A04" }} />
+              <Zap style={{ width: 18, height: 18, color: "#CA8A04" }} />
             </div>
-            <span style={{ fontSize: "20px", fontWeight: 700, color: "#F1F3F8", letterSpacing: "-0.01em" }}>
+            <span style={{ fontSize: "18px", fontWeight: 700, color: "#F1F3F8", letterSpacing: "-0.01em" }}>
               Pay<span style={{ color: "#CA8A04" }}>Flow</span>
             </span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "10px",
-                padding: "8px 14px",
+                gap: "8px",
+                padding: "6px 12px",
                 borderRadius: "12px",
                 background: "rgba(15,20,35,0.65)",
                 border: "1px solid rgba(255,255,255,0.06)",
@@ -433,14 +402,14 @@ export default function DashboardPage() {
               >
                 {getInitials(userEmail)}
               </div>
-              <span style={{ fontSize: "13px", fontWeight: 500, color: "#C8CDD8" }}>
+              <span className="nav-email" style={{ fontSize: "13px", fontWeight: 500, color: "#C8CDD8" }}>
                 {userEmail}
               </span>
             </div>
             <button
               onClick={handleLogout}
               style={{
-                padding: "10px",
+                padding: "8px",
                 borderRadius: "10px",
                 background: "none",
                 border: "1px solid rgba(255,255,255,0.06)",
@@ -458,35 +427,13 @@ export default function DashboardPage() {
         </div>
       </nav>
 
-      {/* Main Content - Full Width Centered */}
-      <main
-        style={{
-          flex: 1,
-          width: "100%",
-          maxWidth: "1400px",
-          margin: "0 auto",
-          padding: "32px 32px 48px",
-          position: "relative",
-          zIndex: 10,
-        }}
-      >
+      {/* ══════ Main Content ══════ */}
+      <main className="dash-main">
         {/* Header Row */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-            gap: "24px",
-            marginBottom: "32px",
-          }}
-          className="animate-fade-in-up"
-        >
+        <div className="dash-header animate-fade-in-up">
           <div>
-            <h1 style={{ fontSize: "36px", fontWeight: 800, color: "#F1F3F8", letterSpacing: "-0.025em", marginBottom: "6px" }}>
-              Dashboard
-            </h1>
-            <p style={{ color: "#7A839A", fontSize: "15px", fontWeight: 500 }}>
+            <h1 className="dash-title">Dashboard</h1>
+            <p style={{ color: "#7A839A", fontSize: "14px", fontWeight: 500 }}>
               You have{" "}
               <span style={{ color: "#FDE68A", fontWeight: 700 }}>{totalPending} pending</span>{" "}
               requests requiring your attention.
@@ -496,22 +443,7 @@ export default function DashboardPage() {
           <button
             onClick={() => setModalOpen(true)}
             id="new-request-btn"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "10px",
-              padding: "12px 28px",
-              background: "linear-gradient(135deg, #CA8A04 0%, #EAB308 100%)",
-              color: "#0A0E1A",
-              fontSize: "14px",
-              fontWeight: 700,
-              border: "none",
-              borderRadius: "14px",
-              cursor: "pointer",
-              transition: "all 200ms ease-out",
-              letterSpacing: "0.01em",
-            }}
+            className="request-money-btn"
           >
             <Plus style={{ width: 20, height: 20 }} />
             Request Money
@@ -527,52 +459,20 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Stats Grid - Full Width */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "20px",
-            marginBottom: "40px",
-          }}
-        >
+        {/* ══════ Stats Grid ══════ */}
+        <div className="stats-grid">
           {/* Total Received */}
-          <div
-            className="animate-fade-in-up"
-            style={{
-              animationDelay: "100ms",
-              background: "rgba(15, 20, 35, 0.65)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              border: "1px solid rgba(202,138,4,0.2)",
-              borderRadius: "20px",
-              padding: "28px",
-              position: "relative",
-              overflow: "hidden",
-              boxShadow: "0 4px 24px -4px rgba(0,0,0,0.4), 0 0 20px rgba(202,138,4,0.08)",
-            }}
-          >
+          <div className="stat-card stat-card-gold animate-fade-in-up" style={{ animationDelay: "100ms" }}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "1px", background: "linear-gradient(90deg, transparent, rgba(202,138,4,0.2), transparent)" }} />
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+            <div className="stat-header">
               <p style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#7A839A" }}>
                 Total Received
               </p>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "rgba(16,185,129,0.12)",
-                  border: "1px solid rgba(16,185,129,0.2)",
-                }}
-              >
-                <ArrowDownLeft style={{ width: 20, height: 20, color: "#6EE7B7" }} />
+              <div className="stat-icon" style={{ background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.2)" }}>
+                <ArrowDownLeft style={{ width: 18, height: 18, color: "#6EE7B7" }} />
               </div>
             </div>
-            <p style={{ fontSize: "32px", fontWeight: 800, color: "#F1F3F8", letterSpacing: "-0.02em", marginBottom: "8px", fontFeatureSettings: '"tnum"' }}>
+            <p className="stat-value">
               ${animatedReceived.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -588,42 +488,17 @@ export default function DashboardPage() {
           </div>
 
           {/* Total Sent */}
-          <div
-            className="animate-fade-in-up"
-            style={{
-              animationDelay: "200ms",
-              background: "rgba(15, 20, 35, 0.65)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              border: "1px solid rgba(255,255,255,0.06)",
-              borderRadius: "20px",
-              padding: "28px",
-              position: "relative",
-              overflow: "hidden",
-              boxShadow: "0 4px 24px -4px rgba(0,0,0,0.4)",
-            }}
-          >
+          <div className="stat-card animate-fade-in-up" style={{ animationDelay: "200ms" }}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "1px", background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)" }} />
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+            <div className="stat-header">
               <p style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#7A839A" }}>
                 Total Sent
               </p>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "rgba(59,130,246,0.12)",
-                  border: "1px solid rgba(59,130,246,0.2)",
-                }}
-              >
-                <ArrowUpRight style={{ width: 20, height: 20, color: "#93C5FD" }} />
+              <div className="stat-icon" style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.2)" }}>
+                <ArrowUpRight style={{ width: 18, height: 18, color: "#93C5FD" }} />
               </div>
             </div>
-            <p style={{ fontSize: "32px", fontWeight: 800, color: "#F1F3F8", letterSpacing: "-0.02em", marginBottom: "8px", fontFeatureSettings: '"tnum"' }}>
+            <p className="stat-value">
               ${animatedSent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -639,42 +514,17 @@ export default function DashboardPage() {
           </div>
 
           {/* Pending */}
-          <div
-            className="animate-fade-in-up"
-            style={{
-              animationDelay: "300ms",
-              background: "rgba(15, 20, 35, 0.65)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              border: "1px solid rgba(255,255,255,0.06)",
-              borderRadius: "20px",
-              padding: "28px",
-              position: "relative",
-              overflow: "hidden",
-              boxShadow: "0 4px 24px -4px rgba(0,0,0,0.4)",
-            }}
-          >
+          <div className="stat-card animate-fade-in-up" style={{ animationDelay: "300ms" }}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "1px", background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)" }} />
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+            <div className="stat-header">
               <p style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#7A839A" }}>
                 Pending
               </p>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "rgba(245,158,11,0.12)",
-                  border: "1px solid rgba(245,158,11,0.2)",
-                }}
-              >
-                <Clock style={{ width: 20, height: 20, color: "#FCD34D" }} />
+              <div className="stat-icon" style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.2)" }}>
+                <Clock style={{ width: 18, height: 18, color: "#FCD34D" }} />
               </div>
             </div>
-            <p style={{ fontSize: "32px", fontWeight: 800, color: "#F1F3F8", letterSpacing: "-0.02em", marginBottom: "8px" }}>
+            <p className="stat-value">
               {totalPending}
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -688,22 +538,12 @@ export default function DashboardPage() {
           incomingPaid={totalReceived}
           outgoingPaid={totalSent}
           walletBalance={derivedBalance}
-          incomingRequests={outgoing} // Outgoing requests bring money IN
-          outgoingRequests={incoming} // Incoming requests take money OUT
+          incomingRequests={outgoing}
+          outgoingRequests={incoming}
         />
 
-        {/* Tab Controls */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "16px",
-            marginBottom: "24px",
-          }}
-          className="animate-fade-in-up"
-        >
+        {/* ══════ Tab Controls ══════ */}
+        <div className="tab-controls animate-fade-in-up">
           <div
             style={{
               display: "flex",
@@ -724,7 +564,7 @@ export default function DashboardPage() {
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
-                    padding: "10px 24px",
+                    padding: "10px 20px",
                     borderRadius: "10px",
                     fontSize: "13px",
                     fontWeight: 600,
@@ -733,6 +573,8 @@ export default function DashboardPage() {
                     color: isActive ? "#FDE68A" : "#7A839A",
                     cursor: "pointer",
                     transition: "all 200ms ease-out",
+                    flex: 1,
+                    justifyContent: "center",
                   }}
                 >
                   <Icon style={{ width: 16, height: 16 }} />
@@ -747,21 +589,10 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Request List */}
+        {/* ══════ Request List ══════ */}
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           {currentList.length === 0 ? (
-            <div
-              className="animate-fade-in-up"
-              style={{
-                background: "rgba(15,20,35,0.65)",
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                borderRadius: "20px",
-                padding: "80px 32px",
-                textAlign: "center",
-              }}
-            >
+            <div className="empty-state animate-fade-in-up">
               <div
                 style={{
                   width: "64px",
@@ -797,81 +628,43 @@ export default function DashboardPage() {
               return (
                 <div
                   key={req.id}
-                  className="animate-fade-in-up"
-                  style={{
-                    animationDelay: `${i * 60}ms`,
-                    background: "rgba(15,20,35,0.65)",
-                    backdropFilter: "blur(20px)",
-                    WebkitBackdropFilter: "blur(20px)",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    borderRadius: "18px",
-                    padding: "24px 28px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "20px",
-                    transition: "all 250ms ease-out",
-                    position: "relative",
-                    overflow: "hidden",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
-                    e.currentTarget.style.background = "rgba(15,20,35,0.85)";
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 8px 40px -8px rgba(0,0,0,0.5)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
-                    e.currentTarget.style.background = "rgba(15,20,35,0.65)";
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
+                  className="request-card animate-fade-in-up"
+                  style={{ animationDelay: `${i * 60}ms` }}
                 >
                   {/* Top shimmer */}
                   <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "1px", background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)", pointerEvents: "none" }} />
 
-                  {/* Avatar */}
-                  <div
-                    style={{
-                      flexShrink: 0,
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "14px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: 700,
-                      fontSize: "16px",
-                      background: "linear-gradient(135deg, rgba(202,138,4,0.15), rgba(202,138,4,0.05))",
-                      border: "1px solid rgba(202,138,4,0.2)",
-                      color: "#FDE68A",
-                    }}
-                  >
-                    {getInitials(contactEmail)}
-                  </div>
-
-                  {/* Details */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "4px" }}>
-                      <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#F1F3F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {contactEmail}
-                      </h3>
-                      <StatusBadge status={status} />
+                  {/* Main section: Avatar + Details */}
+                  <div className="request-card-main">
+                    {/* Avatar */}
+                    <div className="request-avatar">
+                      {getInitials(contactEmail)}
                     </div>
-                    <p style={{ color: "#7A839A", fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: "2px" }}>
-                      {req.note || "No note provided"}
-                    </p>
-                    <p style={{ color: "#4D5570", fontSize: "12px", fontWeight: 500 }}>
-                      Expires {formatDate(req.expires_at)}
-                    </p>
+
+                    {/* Details */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px", flexWrap: "wrap" }}>
+                        <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#F1F3F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
+                          {contactEmail}
+                        </h3>
+                        <StatusBadge status={status} />
+                      </div>
+                      <p style={{ color: "#7A839A", fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: "2px" }}>
+                        {req.note || "No note provided"}
+                      </p>
+                      <p style={{ color: "#4D5570", fontSize: "12px", fontWeight: 500 }}>
+                        Expires {formatDate(req.expires_at)}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Amount & Actions */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "20px", flexShrink: 0 }}>
-                    <div style={{ fontSize: "24px", fontWeight: 800, color: "#F1F3F8", letterSpacing: "-0.02em", whiteSpace: "nowrap" }}>
+                  {/* Bottom section: Amount & Actions */}
+                  <div className="request-card-actions">
+                    <div className="request-amount">
                       {formatAmount(req.amount)}
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div className="request-action-buttons">
                       {isPaying ? (
                         <div
                           style={{
@@ -889,57 +682,15 @@ export default function DashboardPage() {
                         </div>
                       ) : isActionable && isIncoming ? (
                         <>
-                          <button
-                            onClick={() => handlePay(req)}
-                            style={{
-                              padding: "10px 24px",
-                              background: "linear-gradient(135deg, #CA8A04 0%, #EAB308 100%)",
-                              color: "#0A0E1A",
-                              fontSize: "13px",
-                              fontWeight: 700,
-                              border: "none",
-                              borderRadius: "12px",
-                              cursor: "pointer",
-                              transition: "all 200ms ease-out",
-                            }}
-                          >
+                          <button onClick={() => handlePay(req)} className="btn-pay">
                             Pay
                           </button>
-                          <button
-                            onClick={() => handleDecline(req.id)}
-                            style={{
-                              padding: "10px 18px",
-                              background: "rgba(255,255,255,0.04)",
-                              border: "1px solid rgba(255,255,255,0.08)",
-                              color: "#C8CDD8",
-                              fontSize: "13px",
-                              fontWeight: 600,
-                              borderRadius: "12px",
-                              cursor: "pointer",
-                              transition: "all 200ms ease-out",
-                            }}
-                          >
+                          <button onClick={() => handleDecline(req.id)} className="btn-decline">
                             Decline
                           </button>
                         </>
                       ) : isActionable && !isIncoming ? (
-                        <button
-                          onClick={() => handleCancel(req.id)}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            padding: "10px 18px",
-                            background: "rgba(255,255,255,0.04)",
-                            border: "1px solid rgba(255,255,255,0.08)",
-                            color: "#C8CDD8",
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            borderRadius: "12px",
-                            cursor: "pointer",
-                            transition: "all 200ms ease-out",
-                          }}
-                        >
+                        <button onClick={() => handleCancel(req.id)} className="btn-decline" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                           <XCircle style={{ width: 16, height: 16 }} />
                           Cancel
                         </button>

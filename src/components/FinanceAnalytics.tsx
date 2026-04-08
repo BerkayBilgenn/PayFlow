@@ -63,7 +63,6 @@ function useAnimatedNumber(target: number, duration = 600): number {
     const tick = (now: number) => {
       const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
-      // easeOutExpo
       const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
       setDisplay(from + (to - from) * eased);
       if (progress < 1) {
@@ -112,13 +111,11 @@ function buildMonthlyData(
     .filter((r) => r.status === "PAID")
     .forEach((r) => addToMonth(r.created_at, "outgoing", r.amount));
 
-  // Calculate the total net change from all months to derive starting balance
   let totalNetChange = 0;
   monthKeys.forEach((key) => {
     totalNetChange += months[key].income - months[key].outgoing;
   });
 
-  // Starting balance = current wallet balance minus the accumulated net changes
   let runningBalance = walletBalance - totalNetChange;
 
   return monthKeys.map((key) => {
@@ -151,11 +148,11 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         background: "rgba(8, 12, 24, 0.96)",
         backdropFilter: "blur(24px)",
         border: "1px solid rgba(255,255,255,0.1)",
-        borderRadius: "16px",
-        padding: "16px 20px",
+        borderRadius: "14px",
+        padding: "14px 16px",
         boxShadow:
           "0 20px 60px -12px rgba(0,0,0,0.7), 0 0 30px rgba(202,138,4,0.08)",
-        minWidth: "180px",
+        minWidth: "160px",
       }}
     >
       <p
@@ -165,7 +162,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
           color: "#4D5570",
           textTransform: "uppercase",
           letterSpacing: "0.1em",
-          marginBottom: "12px",
+          marginBottom: "10px",
           paddingBottom: "8px",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}
@@ -184,29 +181,29 @@ const CustomTooltip = ({ active, payload, label }: any) => {
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              gap: "24px",
-              padding: "4px 0",
+              gap: "16px",
+              padding: "3px 0",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <div
                 style={{
-                  width: "10px",
-                  height: "10px",
+                  width: "8px",
+                  height: "8px",
                   borderRadius: "50%",
                   background: meta.dot,
                   boxShadow: `0 0 8px ${meta.dot}60`,
                 }}
               />
               <span
-                style={{ fontSize: "12px", color: "#9CA3AF", fontWeight: 500 }}
+                style={{ fontSize: "11px", color: "#9CA3AF", fontWeight: 500 }}
               >
                 {meta.label}
               </span>
             </div>
             <span
               style={{
-                fontSize: "14px",
+                fontSize: "13px",
                 fontWeight: 800,
                 color: "#F1F3F8",
                 fontFeatureSettings: '"tnum"',
@@ -237,8 +234,9 @@ const CustomLegend = ({ payload }: any) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: "24px",
-        paddingTop: "16px",
+        gap: "16px",
+        paddingTop: "12px",
+        flexWrap: "wrap",
       }}
     >
       {payload.map((entry: any) => {
@@ -252,12 +250,12 @@ const CustomLegend = ({ payload }: any) => {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "8px",
+              gap: "6px",
             }}
           >
             <div
               style={{
-                width: "12px",
+                width: "10px",
                 height: "3px",
                 borderRadius: "2px",
                 background: meta.color,
@@ -266,7 +264,7 @@ const CustomLegend = ({ payload }: any) => {
             />
             <span
               style={{
-                fontSize: "12px",
+                fontSize: "11px",
                 fontWeight: 600,
                 color: "#7A839A",
               }}
@@ -335,7 +333,6 @@ export default function FinanceAnalytics({
   const netFlow = incomingPaid - outgoingPaid;
   const isPositive = netFlow >= 0;
 
-  // Calculate real percentage changes from real data
   const lastMonth = chartData[chartData.length - 2] || { income: 0, outgoing: 0 };
   const thisMonth = chartData[chartData.length - 1] || { income: 0, outgoing: 0 };
   const incomeChange =
@@ -347,26 +344,12 @@ export default function FinanceAnalytics({
       ? (((thisMonth.outgoing - lastMonth.outgoing) / lastMonth.outgoing) * 100).toFixed(1)
       : "0";
 
-  // Animated values
   const animatedNetFlow = useAnimatedNumber(Math.abs(netFlow));
   const animatedIncoming = useAnimatedNumber(incomingPaid);
   const animatedOutgoing = useAnimatedNumber(outgoingPaid);
 
   return (
-    <div
-      className="animate-fade-in-up"
-      style={{
-        background: "rgba(15, 20, 35, 0.65)",
-        backdropFilter: "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
-        border: "1px solid rgba(255,255,255,0.06)",
-        borderRadius: "24px",
-        padding: "32px",
-        marginBottom: "32px",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
+    <div className="finance-analytics animate-fade-in-up">
       {/* Top gradient shimmer line */}
       <div
         style={{
@@ -409,31 +392,22 @@ export default function FinanceAnalytics({
       />
 
       {/* ─── Header ─── */}
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          gap: "20px",
-          marginBottom: "28px",
-        }}
-      >
+      <div className="analytics-header">
         {/* Title */}
         <div>
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "12px",
-              marginBottom: "6px",
+              gap: "10px",
+              marginBottom: "4px",
             }}
           >
             <div
               style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "11px",
+                width: "34px",
+                height: "34px",
+                borderRadius: "10px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -443,12 +417,12 @@ export default function FinanceAnalytics({
                 boxShadow: "0 0 16px rgba(202,138,4,0.08)",
               }}
             >
-              <Activity style={{ width: 18, height: 18, color: "#CA8A04" }} />
+              <Activity style={{ width: 16, height: 16, color: "#CA8A04" }} />
             </div>
             <div>
               <h2
                 style={{
-                  fontSize: "18px",
+                  fontSize: "16px",
                   fontWeight: 800,
                   color: "#F1F3F8",
                   letterSpacing: "-0.02em",
@@ -458,10 +432,10 @@ export default function FinanceAnalytics({
               </h2>
               <p
                 style={{
-                  fontSize: "12px",
+                  fontSize: "11px",
                   color: "#4D5570",
                   fontWeight: 500,
-                  marginTop: "2px",
+                  marginTop: "1px",
                 }}
               >
                 {hasActivity
@@ -473,15 +447,11 @@ export default function FinanceAnalytics({
         </div>
 
         {/* Metric pills */}
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+        <div className="metric-pills">
           {/* Net Flow */}
           <div
+            className="metric-pill"
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "10px 16px",
-              borderRadius: "14px",
               background: isPositive
                 ? "rgba(16,185,129,0.06)"
                 : "rgba(239,68,68,0.06)",
@@ -492,34 +462,18 @@ export default function FinanceAnalytics({
           >
             {isPositive ? (
               <TrendingUp
-                style={{ width: 14, height: 14, color: "#10B981" }}
+                style={{ width: 14, height: 14, color: "#10B981", flexShrink: 0 }}
               />
             ) : (
               <TrendingDown
-                style={{ width: 14, height: 14, color: "#EF4444" }}
+                style={{ width: 14, height: 14, color: "#EF4444", flexShrink: 0 }}
               />
             )}
-            <div>
-              <p
-                style={{
-                  fontSize: "9px",
-                  fontWeight: 700,
-                  color: isPositive ? "#10B981" : "#EF4444",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
+            <div style={{ minWidth: 0 }}>
+              <p className="pill-label" style={{ color: isPositive ? "#10B981" : "#EF4444" }}>
                 Net Flow
               </p>
-              <p
-                style={{
-                  fontSize: "14px",
-                  fontWeight: 800,
-                  color: isPositive ? "#6EE7B7" : "#FCA5A5",
-                  letterSpacing: "-0.02em",
-                  fontFeatureSettings: '"tnum"',
-                }}
-              >
+              <p className="pill-value" style={{ color: isPositive ? "#6EE7B7" : "#FCA5A5" }}>
                 {isPositive ? "+" : "-"}${animatedNetFlow.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
@@ -527,40 +481,20 @@ export default function FinanceAnalytics({
 
           {/* Income pill */}
           <div
+            className="metric-pill"
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "10px 16px",
-              borderRadius: "14px",
               background: "rgba(16,185,129,0.05)",
               border: "1px solid rgba(16,185,129,0.12)",
             }}
           >
             <ArrowDownLeft
-              style={{ width: 14, height: 14, color: "#6EE7B7" }}
+              style={{ width: 14, height: 14, color: "#6EE7B7", flexShrink: 0 }}
             />
-            <div>
-              <p
-                style={{
-                  fontSize: "9px",
-                  fontWeight: 700,
-                  color: "#10B981",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
+            <div style={{ minWidth: 0 }}>
+              <p className="pill-label" style={{ color: "#10B981" }}>
                 Received
               </p>
-              <p
-                style={{
-                  fontSize: "14px",
-                  fontWeight: 800,
-                  color: "#6EE7B7",
-                  letterSpacing: "-0.02em",
-                  fontFeatureSettings: '"tnum"',
-                }}
-              >
+              <p className="pill-value" style={{ color: "#6EE7B7" }}>
                 ${animatedIncoming.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
@@ -568,40 +502,20 @@ export default function FinanceAnalytics({
 
           {/* Outgoing pill */}
           <div
+            className="metric-pill"
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "10px 16px",
-              borderRadius: "14px",
               background: "rgba(139,92,246,0.05)",
               border: "1px solid rgba(139,92,246,0.12)",
             }}
           >
             <ArrowUpRight
-              style={{ width: 14, height: 14, color: "#C4B5FD" }}
+              style={{ width: 14, height: 14, color: "#C4B5FD", flexShrink: 0 }}
             />
-            <div>
-              <p
-                style={{
-                  fontSize: "9px",
-                  fontWeight: 700,
-                  color: "#8B5CF6",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
+            <div style={{ minWidth: 0 }}>
+              <p className="pill-label" style={{ color: "#8B5CF6" }}>
                 Sent
               </p>
-              <p
-                style={{
-                  fontSize: "14px",
-                  fontWeight: 800,
-                  color: "#C4B5FD",
-                  letterSpacing: "-0.02em",
-                  fontFeatureSettings: '"tnum"',
-                }}
-              >
+              <p className="pill-value" style={{ color: "#C4B5FD" }}>
                 ${animatedOutgoing.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
@@ -610,11 +524,11 @@ export default function FinanceAnalytics({
       </div>
 
       {/* ─── Chart ─── */}
-      <div style={{ width: "100%", height: "280px" }}>
+      <div className="chart-container">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={chartData}
-            margin={{ top: 8, right: 8, left: -10, bottom: 0 }}
+            margin={{ top: 8, right: 4, left: -16, bottom: 0 }}
           >
             <defs>
               {/* Income gradient - green */}
@@ -675,7 +589,7 @@ export default function FinanceAnalytics({
               dataKey="month"
               tick={{
                 fill: "#4D5570",
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: 600,
               }}
               axisLine={false}
@@ -694,7 +608,7 @@ export default function FinanceAnalytics({
                 if (v >= 1000) return `$${(v / 1000).toFixed(1)}k`;
                 return `$${v}`;
               }}
-              width={55}
+              width={48}
             />
 
             <Tooltip
@@ -758,16 +672,7 @@ export default function FinanceAnalytics({
       </div>
 
       {/* ─── Bottom Mini Stats ─── */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "12px",
-          marginTop: "20px",
-          paddingTop: "20px",
-          borderTop: "1px solid rgba(255,255,255,0.04)",
-        }}
-      >
+      <div className="analytics-bottom-stats">
         <div
           style={{
             display: "flex",
@@ -788,11 +693,12 @@ export default function FinanceAnalytics({
               alignItems: "center",
               justifyContent: "center",
               background: "rgba(16,185,129,0.1)",
+              flexShrink: 0,
             }}
           >
             <ArrowDownLeft style={{ width: 14, height: 14, color: "#6EE7B7" }} />
           </div>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <p
               style={{
                 fontSize: "10px",
@@ -853,11 +759,12 @@ export default function FinanceAnalytics({
               alignItems: "center",
               justifyContent: "center",
               background: "rgba(139,92,246,0.1)",
+              flexShrink: 0,
             }}
           >
             <ArrowUpRight style={{ width: 14, height: 14, color: "#C4B5FD" }} />
           </div>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <p
               style={{
                 fontSize: "10px",
@@ -918,11 +825,12 @@ export default function FinanceAnalytics({
               alignItems: "center",
               justifyContent: "center",
               background: "rgba(245,158,11,0.1)",
+              flexShrink: 0,
             }}
           >
             <Wallet style={{ width: 14, height: 14, color: "#FCD34D" }} />
           </div>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <p
               style={{
                 fontSize: "10px",

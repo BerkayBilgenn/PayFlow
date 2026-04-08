@@ -26,22 +26,7 @@ export default function WalletCard({ balance, userEmail, loading }: WalletCardPr
   const initial = userEmail ? userEmail.charAt(0).toUpperCase() : "U";
 
   return (
-    <div
-      style={{
-        position: "relative",
-        borderRadius: "24px",
-        padding: "32px 32px 28px",
-        overflow: "hidden",
-        marginBottom: "32px",
-        // Rich layered dark gold gradient — like a premium metal card
-        background:
-          "linear-gradient(135deg, #1A1400 0%, #0E1020 40%, #0A0F1F 70%, #120D00 100%)",
-        border: "1px solid rgba(202,138,4,0.25)",
-        boxShadow:
-          "0 8px 40px -8px rgba(0,0,0,0.7), 0 0 80px -30px rgba(202,138,4,0.18), inset 0 1px 0 rgba(202,138,4,0.12)",
-        userSelect: "none",
-      }}
-    >
+    <div className="wallet-card">
       {/* Shimmer line top */}
       <div
         style={{
@@ -89,14 +74,14 @@ export default function WalletCard({ balance, userEmail, loading }: WalletCardPr
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          marginBottom: "32px",
+          marginBottom: "24px",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div
             style={{
-              width: "36px",
-              height: "36px",
+              width: "34px",
+              height: "34px",
               borderRadius: "10px",
               display: "flex",
               alignItems: "center",
@@ -105,7 +90,7 @@ export default function WalletCard({ balance, userEmail, loading }: WalletCardPr
               border: "1px solid rgba(202,138,4,0.3)",
             }}
           >
-            <Wallet style={{ width: 18, height: 18, color: "#CA8A04" }} />
+            <Wallet style={{ width: 16, height: 16, color: "#CA8A04" }} />
           </div>
           <span
             style={{ fontSize: "13px", fontWeight: 700, color: "#FDE68A", letterSpacing: "0.04em" }}
@@ -134,7 +119,7 @@ export default function WalletCard({ balance, userEmail, loading }: WalletCardPr
       </div>
 
       {/* Balance */}
-      <div style={{ marginBottom: "32px" }}>
+      <div style={{ marginBottom: "24px" }}>
         <p
           style={{
             fontSize: "11px",
@@ -142,7 +127,7 @@ export default function WalletCard({ balance, userEmail, loading }: WalletCardPr
             color: "#7A839A",
             textTransform: "uppercase",
             letterSpacing: "0.1em",
-            marginBottom: "10px",
+            marginBottom: "8px",
           }}
         >
           Available Balance
@@ -150,49 +135,32 @@ export default function WalletCard({ balance, userEmail, loading }: WalletCardPr
         {loading ? (
           <div
             style={{
-              height: "44px",
-              width: "220px",
+              height: "36px",
+              width: "180px",
               borderRadius: "8px",
               background: "rgba(255,255,255,0.06)",
               animation: "pulse 1.5s ease-in-out infinite",
             }}
           />
         ) : (
-          <p
-            style={{
-              fontSize: "42px",
-              fontWeight: 800,
-              letterSpacing: "-0.03em",
-              color: "#F1F3F8",
-              lineHeight: 1,
-              transition: "all 300ms ease-out",
-            }}
-          >
+          <p className="wallet-balance">
             {formatted}
           </p>
         )}
       </div>
 
       {/* Bottom row: avatar + chips */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: "12px",
-        }}
-      >
+      <div className="wallet-bottom">
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div
             style={{
-              width: "34px",
-              height: "34px",
+              width: "32px",
+              height: "32px",
               borderRadius: "10px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "14px",
+              fontSize: "13px",
               fontWeight: 800,
               background: "linear-gradient(135deg, rgba(202,138,4,0.25), rgba(202,138,4,0.08))",
               border: "1px solid rgba(202,138,4,0.3)",
@@ -201,17 +169,7 @@ export default function WalletCard({ balance, userEmail, loading }: WalletCardPr
           >
             {initial}
           </div>
-          <span
-            style={{
-              fontSize: "12px",
-              color: "#7A839A",
-              fontWeight: 500,
-              maxWidth: "200px",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
+          <span className="wallet-email">
             {userEmail}
           </span>
         </div>
