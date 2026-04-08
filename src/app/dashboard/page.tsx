@@ -373,18 +373,8 @@ export default function DashboardPage() {
             </span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "6px 12px",
-                borderRadius: "12px",
-                background: "rgba(15,20,35,0.65)",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
+          <div className="nav-right">
+            <div className="nav-user-badge">
               <div
                 style={{
                   width: "28px",
@@ -398,11 +388,12 @@ export default function DashboardPage() {
                   background: "linear-gradient(135deg, rgba(202,138,4,0.2), rgba(202,138,4,0.05))",
                   border: "1px solid rgba(202,138,4,0.2)",
                   color: "#FDE68A",
+                  flexShrink: 0,
                 }}
               >
                 {getInitials(userEmail)}
               </div>
-              <span className="nav-email" style={{ fontSize: "13px", fontWeight: 500, color: "#C8CDD8" }}>
+              <span className="nav-email">
                 {userEmail}
               </span>
             </div>
@@ -418,6 +409,7 @@ export default function DashboardPage() {
                 transition: "all 200ms",
                 display: "flex",
                 alignItems: "center",
+                flexShrink: 0,
               }}
               aria-label="Logout"
             >
@@ -642,17 +634,15 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Details */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px", flexWrap: "wrap" }}>
-                        <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#F1F3F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
-                          {contactEmail}
-                        </h3>
+                    <div className="request-details">
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
+                        <h3>{contactEmail}</h3>
                         <StatusBadge status={status} />
                       </div>
-                      <p style={{ color: "#7A839A", fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: "2px" }}>
+                      <p className="request-note">
                         {req.note || "No note provided"}
                       </p>
-                      <p style={{ color: "#4D5570", fontSize: "12px", fontWeight: 500 }}>
+                      <p className="request-date">
                         Expires {formatDate(req.expires_at)}
                       </p>
                     </div>
