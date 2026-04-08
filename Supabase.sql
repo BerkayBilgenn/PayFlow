@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS public.payment_requests (
   sender_email TEXT NOT NULL,
   recipient_email TEXT NOT NULL,
   recipient_contact TEXT NOT NULL,
-  amount DECIMAL(10, 2) NOT NULL CHECK (amount > 0 AND amount <= 10000),
+  amount DECIMAL(10, 2) NOT NULL CHECK (amount > 0),
   note TEXT,
   status TEXT DEFAULT 'PENDING' NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
@@ -34,12 +34,12 @@ FOR SELECT
 TO public
 USING (true);
 
--- Allow authenticated users to insert requests (max $10k constraint enforced by DB)
+-- Allow authenticated users to insert requests (max amount bound by balance locally)
 CREATE POLICY "Users can insert requests"
 ON public.payment_requests
 FOR INSERT
 TO authenticated
-WITH CHECK (sender_id = auth.uid() AND amount > 0 AND amount <= 10000);
+WITH CHECK (sender_id = auth.uid() AND amount > 0);
 
 -- Allow authenticated users to update their own outgoing or incoming requests
 CREATE POLICY "Users can update their outgoing or incoming request statuses"

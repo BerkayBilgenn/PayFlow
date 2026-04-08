@@ -40,7 +40,7 @@ Each payment request has its own shareable URL (`/request/[id]`) showing:
 ### Core Functionality
 | Feature | Description |
 |---|---|
-| **Request Money** | Enter a recipient's email, amount ($0.01–$10,000), and an optional note to create a payment request |
+| **Request Money** | Enter a recipient's email, an amount, and an optional note to create a payment request |
 | **Pay Requests** | Click "Pay" on an incoming request → enter your 4-digit PIN (`1234`) → funds transfer instantly |
 | **Decline Requests** | Reject incoming requests you don't want to pay |
 | **Cancel Requests** | Cancel your own outgoing requests that haven't been paid yet |
@@ -61,7 +61,7 @@ Each payment request has its own shareable URL (`/request/[id]`) showing:
 |---|---|
 | **Email Validation** | RFC 5322 compliant regex — rejects invalid formats like `user@` or `@domain` |
 | **Phone Validation** | E.164 international format (e.g. `+905551234567`) |
-| **Amount Bounds** | Minimum: $0.01, Maximum: $10,000 — enforced on both client AND database |
+| **Amount Bounds** | Minimum: $0.01 — Maximum amount is bounded by the requester's available balance |
 | **Self-Request Block** | You cannot send a payment request to your own email |
 | **Row Level Security** | Database-level policies prevent unauthorized data access |
 | **Atomic Payments** | The `process_payment` RPC uses PostgreSQL row locks to prevent race conditions |
@@ -249,7 +249,7 @@ When you first log in, you'll see:
 1. Click the **"Request Money"** button (gold button, top right of dashboard)
 2. A modal will open with a form:
    - **Recipient Email**: Enter the email of the person you're requesting money from
-   - **Amount**: Enter an amount between $0.01 and $10,000.00
+   - **Amount**: Enter an amount (up to your available balance)
    - **Note** (optional): Add a description like "Dinner split" or "Rent"
 3. Click **"Send Request"**
 4. You'll see a success toast: *"Request for $XX.XX sent to email@example.com"*
@@ -386,7 +386,7 @@ This project follows the **GitHub Spec-Kit** workflow. All specification documen
 ### Row Level Security (RLS)
 - **Anonymous users** can view individual request details (for shareable links)
 - **Authenticated users** can only read/write their own requests
-- **Insert policy** enforces: sender must be the authenticated user, amount must be > 0 and ≤ 10,000
+- **Insert policy** enforces: sender must be the authenticated user, amount must be > 0
 - **Update policy** ensures only sender or recipient can modify request status
 
 ### Atomic Payment Processing

@@ -5,7 +5,6 @@ export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const PHONE_REGEX = /^\+[1-9]\d{1,14}$/;
 
 export const MIN_AMOUNT = 0.01;
-export const MAX_AMOUNT = 10000;
 
 /**
  * Validates the recipient string against standardized email or phone formats.
@@ -30,8 +29,8 @@ export function validateAmount(value: number | string): string | null {
   
   if (isNaN(num)) return "Amount must be a valid number.";
   
-  if (num < MIN_AMOUNT || num > MAX_AMOUNT) {
-    return `Amount must be between $${MIN_AMOUNT} and $${MAX_AMOUNT.toLocaleString()}`;
+  if (num < MIN_AMOUNT) {
+    return `Amount must be greater than $0.00`;
   }
   
   return null;
