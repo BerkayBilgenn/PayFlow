@@ -12,9 +12,11 @@ import {
   XCircle,
   ArrowDownLeft,
   ArrowUpRight,
-  TrendingUp,
   Clock,
   DollarSign,
+  Link2,
+  Search,
+  X as XIcon,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PaymentRequest, getEffectiveStatus } from "@/lib/types";
@@ -52,16 +54,26 @@ function useAnimatedNumber(target: number, duration = 600): number {
 }
 
 type Tab = "incoming" | "outgoing";
+type StatusFilter = "ALL" | PaymentStatus;
 
 export default function DashboardPage() {
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string>("");
   const [userLoading, setUserLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("incoming");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [incoming, setIncoming] = useState<PaymentRequest[]>([]);
   const [outgoing, setOutgoing] = useState<PaymentRequest[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [payingId, setPayingId] = useState<string | null>(null);
+
+  // Debounce search effect
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
   const [confirmPayTarget, setConfirmPayTarget] = useState<PaymentRequest | null>(null);
   const [currentBalance, setCurrentBalance] = useState<number | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(true);
@@ -217,39 +229,62 @@ export default function DashboardPage() {
     const id = confirmPayTarget.id;
     setPayingId(id);
 
-    const { error } = await supabase.rpc('process_payment', {
-      request_id: id,
-    });
+    try {
+      const { error } = await supabase.rpc('process_payment', {
+        request_id: id,
+      });
 
-    setPayingId(null);
-    if (!error) {
-      showToast("Payment successful! Funds have been transferred.", "success");
-      if (userId) {
-        fetchBalance(userId);
+      if (error) {
+        if (error.message.includes('expired')) {
+          showToast(`This request expired on ${formatDate(confirmPayTarget.expires_at)}`, "error");
+        } else if (error.message.includes('pending')) {
+          showToast("This request has already been paid", "error");
+        } else {
+          showToast("Payment failed. Please try again.", "error");
+        }
+      } else {
+        showToast("Payment successful! Funds have been transferred.", "success");
+        if (userId) {
+          fetchBalance(userId);
+        }
       }
-    } else {
-      showToast("Failed to process payment: " + error.message, "error");
+    } catch (e) {
+      showToast("Payment failed. Please try again.", "error");
+    } finally {
+      setPayingId(null);
+      setConfirmPayTarget(null);
     }
-    setConfirmPayTarget(null);
   };
 
   const handleDecline = async (id: string) => {
-    const { error } = await supabase
-      .from("payment_requests")
-      .update({ status: "DECLINED" })
-      .eq("id", id);
-    if (!error) {
-      showToast("Request declined.", "success");
+    try {
+      const { error } = await supabase
+        .from("payment_requests")
+        .update({ status: "DECLINED" })
+        .eq("id", id);
+      if (error) {
+        showToast("Payment failed. Please try again.", "error");
+      } else {
+        showToast("Request declined.", "success");
+      }
+    } catch {
+      showToast("Payment failed. Please try again.", "error");
     }
   };
 
   const handleCancel = async (id: string) => {
-    const { error } = await supabase
-      .from("payment_requests")
-      .update({ status: "CANCELED" })
-      .eq("id", id);
-    if (!error) {
-      showToast("Request canceled.", "success");
+    try {
+      const { error } = await supabase
+        .from("payment_requests")
+        .update({ status: "CANCELED" })
+        .eq("id", id);
+      if (error) {
+        showToast("Payment failed. Please try again.", "error");
+      } else {
+        showToast("Request canceled.", "success");
+      }
+    } catch {
+      showToast("Payment failed. Please try again.", "error");
     }
   };
 
@@ -260,13 +295,11 @@ export default function DashboardPage() {
   }) => {
     const incomingPaidAmount = outgoing.filter((r) => r.status === "PAID").reduce((sum, r) => sum + (r.amount || 0), 0);
     const outgoingPaidAmount = incoming.filter((r) => r.status === "PAID").reduce((sum, r) => sum + (r.amount || 0), 0);
-    const dynamicBalance = 50000 + incomingPaidAmount - outgoingPaidAmount;
+    const baseBalance = currentBalance !== null ? currentBalance : 50000;
+    const dynamicBalance = baseBalance + incomingPaidAmount - outgoingPaidAmount;
 
     if (data.amount > dynamicBalance) {
-      showToast(
-        `Yetersiz Bakiye — İşlem tutarı ($${data.amount.toFixed(2)}) mevcut bakiyenizden ($${dynamicBalance.toFixed(2)}) fazla.`,
-        "error"
-      );
+      showToast("Insufficient balance — transaction exceeds available funds", "error");
       return;
     }
 
@@ -274,26 +307,30 @@ export default function DashboardPage() {
     const expires = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
     const { data: { user } } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from('payment_requests').insert({
-      sender_id: user?.id || "unknown",
-      sender_email: userEmail,
-      recipient_email: data.recipientEmail,
-      recipient_contact: data.recipientEmail,
-      amount: data.amount,
-      note: data.note || null,
-      status: "PENDING",
-      created_at: now.toISOString(),
-      expires_at: expires
-    });
+    try {
+      const { error } = await supabase.from('payment_requests').insert({
+        sender_id: user?.id || "unknown",
+        sender_email: userEmail,
+        recipient_email: data.recipientEmail,
+        recipient_contact: data.recipientEmail,
+        amount: data.amount,
+        note: data.note || null,
+        status: "PENDING",
+        created_at: now.toISOString(),
+        expires_at: expires
+      });
 
-    if (error) {
-      showToast("Failed to send request: " + error.message, "error");
-    } else {
-      showToast(
-        `Request for $${data.amount.toFixed(2)} sent to ${data.recipientEmail}`,
-        "success"
-      );
-      setModalOpen(false);
+      if (error) {
+        showToast("Payment failed. Please try again.", "error");
+      } else {
+        showToast(
+          `Request for $${data.amount.toFixed(2)} sent to ${data.recipientEmail}`,
+          "success"
+        );
+        setModalOpen(false);
+      }
+    } catch {
+      showToast("Payment failed. Please try again.", "error");
     }
   };
 
@@ -327,9 +364,24 @@ export default function DashboardPage() {
     .filter((r) => r.status === "PAID")
     .reduce((sum, r) => sum + (r.amount || 0), 0);
 
-  const currentList = activeTab === "incoming" ? incoming : outgoing;
+  let currentList = activeTab === "incoming" ? incoming : outgoing;
 
-  const derivedBalance = 50000 + totalReceived - totalSent;
+  if (statusFilter !== "ALL") {
+    currentList = currentList.filter(r => getEffectiveStatus(r) === statusFilter);
+  }
+
+  if (debouncedSearch) {
+    const lowerQ = debouncedSearch.toLowerCase();
+    currentList = currentList.filter(
+      (r) => 
+        (r.sender_email && r.sender_email.toLowerCase().includes(lowerQ)) ||
+        (r.recipient_email && r.recipient_email.toLowerCase().includes(lowerQ)) ||
+        (r.note && r.note.toLowerCase().includes(lowerQ))
+    );
+  }
+
+  const baseBalance = currentBalance !== null ? currentBalance : 50000;
+  const derivedBalance = baseBalance + totalReceived - totalSent;
 
   const animatedReceived = useAnimatedNumber(totalReceived);
   const animatedSent = useAnimatedNumber(totalSent);
@@ -534,51 +586,121 @@ export default function DashboardPage() {
           outgoingRequests={incoming}
         />
 
-        {/* ══════ Tab Controls ══════ */}
-        <div className="tab-controls animate-fade-in-up">
-          <div
-            style={{
-              display: "flex",
-              padding: "4px",
-              borderRadius: "14px",
-              background: "rgba(15,20,35,0.5)",
-              border: "1px solid rgba(255,255,255,0.06)",
-            }}
-          >
-            {(["incoming", "outgoing"] as Tab[]).map((tab) => {
-              const isActive = activeTab === tab;
-              const Icon = tab === "incoming" ? ArrowDownLeft : ArrowUpRight;
-              return (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "10px 20px",
-                    borderRadius: "10px",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    border: isActive ? "1px solid rgba(202,138,4,0.25)" : "1px solid transparent",
-                    background: isActive ? "rgba(202,138,4,0.12)" : "transparent",
-                    color: isActive ? "#FDE68A" : "#7A839A",
-                    cursor: "pointer",
-                    transition: "all 200ms ease-out",
-                    flex: 1,
-                    justifyContent: "center",
-                  }}
+        {/* ══════ Filter Controls ══════ */}
+        <div className="tab-controls animate-fade-in-up" style={{ 
+          display: "flex", 
+          flexDirection: "column", 
+          gap: "16px",
+          marginBottom: "24px",
+          background: "rgba(15, 20, 35, 0.4)",
+          padding: "16px",
+          borderRadius: "16px",
+          border: "1px solid rgba(255,255,255,0.06)"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
+            {/* Main Tabs */}
+            <div style={{
+                display: "flex",
+                padding: "4px",
+                borderRadius: "12px",
+                background: "rgba(0,0,0,0.3)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}>
+              {(["incoming", "outgoing"] as Tab[]).map((tab) => {
+                const isActive = activeTab === tab;
+                const Icon = tab === "incoming" ? ArrowDownLeft : ArrowUpRight;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => { setActiveTab(tab); setStatusFilter("ALL"); }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: "8px", padding: "8px 16px", borderRadius: "8px",
+                      fontSize: "13px", fontWeight: 600,
+                      border: isActive ? "1px solid rgba(202,138,4,0.3)" : "1px solid transparent",
+                      background: isActive ? "rgba(202,138,4,0.15)" : "transparent",
+                      color: isActive ? "#FDE68A" : "#7A839A",
+                      cursor: "pointer", transition: "all 200ms ease-out", flex: 1, justifyContent: "center"
+                    }}
+                  >
+                    <Icon style={{ width: 14, height: 14 }} />
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search Bar */}
+            <div style={{ flex: 1, minWidth: "240px", position: "relative" }}>
+              <div style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+                <Search style={{ width: 16, height: 16, color: "#7A839A" }} />
+              </div>
+              <input 
+                type="text"
+                placeholder="Search by email or note..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 36px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: "10px", color: "#F1F3F8", fontSize: "13px", outline: "none", transition: "border 200ms"
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "rgba(202,138,4,0.5)";
+                  e.target.style.boxShadow = "0 0 0 2px rgba(202,138,4,0.1)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "rgba(255,255,255,0.08)";
+                  e.target.style.boxShadow = "none";
+                }}
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery("")}
+                  style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#7A839A" }}
                 >
-                  <Icon style={{ width: 16, height: 16 }} />
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  <XIcon style={{ width: 14, height: 14 }} />
                 </button>
-              );
-            })}
+              )}
+            </div>
           </div>
 
-          <p style={{ fontSize: "13px", color: "#7A839A" }}>
-            Showing <span style={{ color: "#C8CDD8", fontWeight: 600 }}>{currentList.length}</span> requests
-          </p>
+          {/* Sub Tabs (Status Filter) */}
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "8px", paddingTop: "8px", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+             <span style={{ fontSize: "12px", fontWeight: 600, color: "#7A839A", marginRight: "4px" }}>Status:</span>
+             {(["ALL", "PENDING", "PAID", "DECLINED", "EXPIRED"] as StatusFilter[]).map((status) => {
+               const isActive = statusFilter === status;
+               const sourceList = activeTab === "incoming" ? incoming : outgoing;
+               const count = status === "ALL" 
+                  ? sourceList.length 
+                  : sourceList.filter(r => getEffectiveStatus(r) === status).length;
+
+               return (
+                 <button 
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "6px",
+                    padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: 600,
+                    background: isActive ? "rgba(255,255,255,0.1)" : "transparent",
+                    color: isActive ? "#F1F3F8" : "#7A839A",
+                    border: isActive ? "1px solid rgba(255,255,255,0.1)" : "1px solid transparent",
+                    cursor: "pointer", transition: "all 200ms"
+                  }}
+                 >
+                    {status === "ALL" ? "All" : status.charAt(0) + status.slice(1).toLowerCase()}
+                    <span style={{ 
+                      background: isActive ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.05)",
+                      padding: "2px 6px", borderRadius: "10px", fontSize: "10px"
+                    }}>
+                      {count}
+                    </span>
+                 </button>
+               )
+             })}
+             
+             <div style={{ marginLeft: "auto", fontSize: "12px", color: "#7A839A" }}>
+               Showing <span style={{ color: "#C8CDD8", fontWeight: 600 }}>{currentList.length}</span> requests
+             </div>
+          </div>
         </div>
 
         {/* ══════ Request List ══════ */}
@@ -600,11 +722,15 @@ export default function DashboardPage() {
               >
                 <UserIcon style={{ width: 28, height: 28, color: "#4D5570" }} />
               </div>
-              <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#F1F3F8", marginBottom: "8px" }}>
-                No {activeTab} requests
+              <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#F1F3F8", marginBottom: "8px", textAlign: "center" }}>
+                {debouncedSearch ? `No requests matching "${debouncedSearch}"` : statusFilter !== "ALL" ? `No ${statusFilter.toLowerCase()} requests` : `No ${activeTab} requests`}
               </h3>
-              <p style={{ color: "#7A839A", fontSize: "14px" }}>
-                {activeTab === "incoming" ? "You're all caught up!" : "Send a request to get paid."}
+              <p style={{ color: "#7A839A", fontSize: "14px", textAlign: "center" }}>
+                {debouncedSearch 
+                  ? "Try adjusting your search query." 
+                  : statusFilter !== "ALL" 
+                    ? "You don't have any requests matching this status." 
+                    : activeTab === "incoming" ? "You're all caught up!" : "Send a request to get paid."}
               </p>
             </div>
           ) : (
@@ -636,8 +762,39 @@ export default function DashboardPage() {
                     {/* Details */}
                     <div className="request-details">
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
-                        <h3>{contactEmail}</h3>
+                        <h3 style={{ maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{contactEmail}</h3>
                         <StatusBadge status={status} />
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(`${window.location.origin}/request/${req.id}`);
+                            showToast("Link copied to clipboard!", "success");
+                          }}
+                          style={{
+                            marginLeft: "auto",
+                            padding: "6px",
+                            borderRadius: "6px",
+                            background: "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.06)",
+                            color: "#7A839A",
+                            cursor: "pointer",
+                            transition: "all 200ms",
+                            display: "flex",
+                            alignItems: "center"
+                          }}
+                          title="Copy Link"
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = "#CA8A04";
+                            e.currentTarget.style.borderColor = "rgba(202,138,4,0.3)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = "#7A839A";
+                            e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                          }}
+                        >
+                          <Link2 style={{ width: 14, height: 14 }} />
+                        </button>
                       </div>
                       <p className="request-note">
                         {req.note || "No note provided"}

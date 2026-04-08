@@ -10,6 +10,7 @@ import {
   Send,
   AlertCircle,
 } from "lucide-react";
+import { validateRecipient, validateAmount } from "@/lib/validation";
 
 interface RequestMoneyModalProps {
   isOpen: boolean;
@@ -42,18 +43,20 @@ export default function RequestMoneyModal({
 
     const parsedAmount = parseFloat(amount);
 
-    if (!recipientEmail.includes("@")) {
-      setError("Please enter a valid email address.");
+    const recipientError = validateRecipient(recipientEmail);
+    if (recipientError) {
+      setError(recipientError);
       return;
     }
 
     if (recipientEmail.toLowerCase() === currentUserEmail.toLowerCase()) {
-      setError("You cannot send a request to yourself.");
+      setError("You cannot request money from yourself");
       return;
     }
 
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      setError("Amount must be greater than $0.00.");
+    const amountError = validateAmount(parsedAmount);
+    if (amountError) {
+      setError(amountError);
       return;
     }
 
