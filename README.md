@@ -8,7 +8,7 @@ This project was built as part of the **Lovie.co Senior Frontend Engineering** a
 
 ## 🌐 Live Demo
 
-> **Live URL**: https://pay-flow-eight-iota.vercel.app
+> **Live URL**: https://pay-flow-lgbx.vercel.app
 
 You can visit the live demo and test the full application without any local setup. Just create an account and start sending/receiving payment requests!
 
